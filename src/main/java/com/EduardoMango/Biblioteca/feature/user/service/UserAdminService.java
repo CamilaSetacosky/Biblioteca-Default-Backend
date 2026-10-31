@@ -14,6 +14,9 @@ import com.EduardoMango.Biblioteca.feature.auth.repository.CredentialsRepository
 import com.EduardoMango.Biblioteca.feature.auth.repository.RoleRepository;
 import com.EduardoMango.Biblioteca.feature.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +35,35 @@ public class UserAdminService {
     private final RoleRepository roleRepository;
     private final LoanRepository loanRepository;
     private final UserAdminMapper userAdminMapper;
+
+    public Page<UserAdminResponse> getUsers(int page, int size, String sort) {
+        if (page < 0 || size < 1 || size > 100) {
+            throw new IllegalArgumentException("La página debe ser mayor o igual a 0 y el tamaño debe estar entre 1 y 100");
+        }
+
+        Sort requestedSort = parseSort(sort);
+        PageRequest pageRequest = PageRequest.of(page, size, requestedSort);
+        return userRepository.findAll(pageRequest).map(userAdminMapper::toUserAdminResponse);
+    }
+
+    private Sort parseSort(String sort) {
+        String[] parts = sort.split(",", -1);
+        Set<String> allowedFields = Set.of("publicId", "nombre", "apellido", "email", "rol", "activo");
+
+        if (parts.length != 2 || !allowedFields.contains(parts[0])) {
+            throw new IllegalArgumentException("Orden inválido. Usá campo,asc o campo,desc con publicId, nombre, apellido, email, rol o activo");
+        }
+
+        String direction = parts[1];
+        if (!"asc".equalsIgnoreCase(direction) && !"desc".equalsIgnoreCase(direction)) {
+            throw new IllegalArgumentException("La dirección de orden debe ser asc o desc");
+        }
+
+        Sort requestedSort = Sort.by(Sort.Direction.fromString(direction), parts[0]);
+        return "publicId".equals(parts[0])
+                ? requestedSort
+                : requestedSort.and(Sort.by("publicId"));
+    }
 
     @Transactional
     public UserAdminResponse updateUserStatus(UUID targetUserPublicId, Boolean activo, String authenticatedPrincipalName) {

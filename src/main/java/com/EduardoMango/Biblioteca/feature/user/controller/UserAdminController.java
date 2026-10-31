@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -30,6 +31,23 @@ import java.util.UUID;
 public class UserAdminController {
 
     private final UserAdminService userAdminService;
+
+    @Operation(summary = "Listar usuarios",
+            description = "Consulta paginada exclusiva del bibliotecario. Página desde 0, tamaño entre 1 y 100. Orden: campo,asc o campo,desc. Campos permitidos: publicId, nombre, apellido, email, rol y activo.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Página de usuarios recuperada exitosamente"),
+            @ApiResponse(responseCode = "400", description = "Paginación u orden inválidos"),
+            @ApiResponse(responseCode = "401", description = "No autenticado"),
+            @ApiResponse(responseCode = "403", description = "Requiere rol BIBLIOTECARIO")
+    })
+    @GetMapping
+    @PreAuthorize("hasRole('BIBLIOTECARIO')")
+    public ResponseEntity<Page<UserAdminResponse>> getUsers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "apellido,asc") String sort) {
+        return ResponseEntity.ok(userAdminService.getUsers(page, size, sort));
+    }
 
     @Operation(summary = "Modificar estado de cuenta del usuario",
             description = "Activa o desactiva una cuenta. Aplica reglas de negocio: el bibliotecario no puede desactivar su propia cuenta ni suspender usuarios con préstamos activos/vencidos. Sincroniza con Spring Security UserDetails.isEnabled(). Requiere rol BIBLIOTECARIO.")

@@ -22,6 +22,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
@@ -36,6 +37,33 @@ public class BookController {
 
     private final BookService bookService;
     private final BookImportService bookImportService;
+
+    @Operation(summary = "Dar de baja o reactivar un libro",
+            description = "Baja lógica exclusiva del bibliotecario. Rechaza la baja si hay préstamos sin devolver. Conserva historial y stock. Repetir el mismo estado no altera el stock.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Estado actualizado", content = @Content(schema = @Schema(implementation = BookResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Estado inválido o préstamos pendientes", content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "403", description = "Requiere BIBLIOTECARIO", content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "404", description = "Libro inexistente", content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
+    })
+    @PatchMapping("/{isbn}/estado")
+    @PreAuthorize("hasRole('BIBLIOTECARIO')")
+    public ResponseEntity<BookResponse> updateBookStatus(
+            @PathVariable String isbn,
+            @Valid @RequestBody BookStatusUpdateRequest request) {
+        return ResponseEntity.ok(bookService.updateBookStatus(isbn, request.activo()));
+    }
+
+    @Operation(summary = "Listar libros dados de baja",
+            description = "Consulta paginada exclusiva del bibliotecario para encontrar libros y reactivarlos.")
+    @GetMapping("/inactivos")
+    @PreAuthorize("hasRole('BIBLIOTECARIO')")
+    public ResponseEntity<Page<BookResponse>> getInactiveBooks(
+            @ParameterObject @PageableDefault(size = 10, sort = "titulo") Pageable pageable) {
+        return ResponseEntity.ok(bookService.searchInactiveBooks(pageable));
+    }
+
 
     @Operation(summary = "Importar libro desde Google Books API", description = "Consulta metadatos externamente por ISBN y persiste automáticamente el libro, sus autores y categoría sugerida. Requiere rol BIBLIOTECARIO.")
     @ApiResponses({
@@ -106,7 +134,7 @@ public class BookController {
         return ResponseEntity.ok(bookService.searchBooks(titulo, isbn, categoriaPublicId, autorPublicId, soloDisponibles, pageable));
     }
 
-    @Operation(summary = "Obtener libro por ISBN", description = "Recupera la información completa de un libro por su ISBN. Accesible para SOCIO y BIBLIOTECARIO.")
+    @Operation(summary = "Obtener libro por ISBN", description = "Recupera el libro por ISBN. El socio solo puede consultar libros activos; el bibliotecario también puede consultar libros dados de baja.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Libro encontrado", content = @Content(schema = @Schema(implementation = BookResponse.class))),
             @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
@@ -116,8 +144,11 @@ public class BookController {
     @PreAuthorize("hasAnyRole('SOCIO', 'BIBLIOTECARIO')")
     public ResponseEntity<BookResponse> getBookByIsbn(
             @Parameter(description = "Código ISBN del libro", example = "9780307474728")
-            @PathVariable String isbn) {
-        return ResponseEntity.ok(bookService.getBookByIsbn(isbn));
+            @PathVariable String isbn,
+            Authentication authentication) {
+        boolean librarian = authentication.getAuthorities().stream()
+                .anyMatch(authority -> "ROLE_BIBLIOTECARIO".equals(authority.getAuthority()));
+        return ResponseEntity.ok(bookService.getBookByIsbn(isbn, librarian));
     }
 
     @Operation(summary = "Actualizar libro completo", description = "Actualiza metadatos y stock total de un libro garantizando la consistencia con ejemplares prestados. Requiere rol BIBLIOTECARIO.")

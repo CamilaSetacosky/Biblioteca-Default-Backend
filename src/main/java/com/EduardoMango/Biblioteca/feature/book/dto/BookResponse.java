@@ -37,8 +37,18 @@ public record BookResponse(
         String descripcion,
 
         @Schema(description = "Casa editorial", example = "Editorial Sudamericana")
-        String editorial
+        String editorial,
+
+        @Schema(description = "Indica si el libro está habilitado en el catálogo", example = "true")
+        boolean activo
 ) {
+    public BookResponse(UUID publicId, String isbn, String titulo, String urlPortada,
+                        Integer stockTotal, Integer stockDisponible, CategoryResponse categoria,
+                        List<AuthorResponse> autores, String descripcion, String editorial) {
+        this(publicId, isbn, titulo, urlPortada, stockTotal, stockDisponible,
+                categoria, autores, descripcion, editorial, true);
+    }
+
     public BookResponse(String isbn, String titulo, Integer stockTotal, Integer stockDisponible, CategoryResponse categoria, List<AuthorResponse> autores) {
         this(null, isbn, titulo, null, stockTotal, stockDisponible, categoria, autores, null, null);
     }

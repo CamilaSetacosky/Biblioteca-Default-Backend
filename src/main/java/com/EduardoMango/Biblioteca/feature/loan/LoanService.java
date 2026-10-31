@@ -63,8 +63,12 @@ public class LoanService {
             throw new BusinessRuleException("El usuario se encuentra inactivo y no puede solicitar préstamos");
         }
 
-        Book book = bookRepository.findByIsbn(request.libroIsbn())
+        Book book = bookRepository.findByIsbnForUpdate(request.libroIsbn())
                 .orElseThrow(() -> new ResourceNotFoundException("Libro no encontrado con ISBN: " + request.libroIsbn()));
+
+        if (!book.isActivo()) {
+            throw new BusinessRuleException("El libro está dado de baja y no admite nuevos préstamos");
+        }
 
         if (book.getStockDisponible() == null || book.getStockDisponible() <= 0) {
             throw new BusinessRuleException("No hay ejemplares disponibles del libro solicitado");

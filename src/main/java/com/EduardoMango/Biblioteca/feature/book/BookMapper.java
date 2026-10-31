@@ -17,6 +17,7 @@ public interface BookMapper {
     @Mapping(target = "stockDisponible", ignore = true)
     @Mapping(target = "categoria", ignore = true)
     @Mapping(target = "autores", ignore = true)
+    @Mapping(target = "activo", ignore = true)
     Book toEntity(BookCreateRequest request);
 
     BookResponse toResponse(Book book);

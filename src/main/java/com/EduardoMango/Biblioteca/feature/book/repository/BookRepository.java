@@ -13,6 +13,10 @@ public interface BookRepository extends JpaRepository<Book, Long>, JpaSpecificat
 
     Optional<Book> findByIsbn(String isbn);
 
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @org.springframework.data.jpa.repository.Query("SELECT b FROM Book b WHERE b.isbn = :isbn")
+    Optional<Book> findByIsbnForUpdate(@org.springframework.data.repository.query.Param("isbn") String isbn);
+
     Optional<Book> findByPublicId(UUID publicId);
 
     @org.springframework.data.jpa.repository.Query("SELECT b FROM Book b LEFT JOIN FETCH b.categoria LEFT JOIN FETCH b.autores WHERE b.id = :id")

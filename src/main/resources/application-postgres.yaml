@@ -1,0 +1,24 @@
+# Activar con SPRING_PROFILES_ACTIVE=postgres.
+# .env es local y está excluido de Git. Sus valores se leen como properties.
+spring:
+  config:
+    import: optional:file:./.env[.properties]
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/library_hub}
+    driver-class-name: org.postgresql.Driver
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  h2:
+    console:
+      enabled: false
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      # El arranque comprueba el esquema; no crea, modifica ni elimina tablas.
+      ddl-auto: validate
+  sql:
+    init:
+      mode: never
+
+server:
+  port: 8081

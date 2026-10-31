@@ -89,7 +89,7 @@ public class LoanController {
             @Parameter(description = "Filtrar por identificador público UUID de un socio específico", example = "1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d")
             @RequestParam(required = false) UUID usuarioPublicId,
             @ParameterObject
-            @PageableDefault(size = 10, sort = "fechaDevolucionEsperada", direction = Sort.Direction.ASC) Pageable pageable) {
+            @PageableDefault(size = 10, sort = {"fechaPrestamo", "id"}, direction = Sort.Direction.DESC) Pageable pageable) {
         Page<LoanSupervisionResponse> page = loanService.getLoansForSupervision(estado, soloAtrasados, usuarioPublicId, pageable);
         return ResponseEntity.ok(page);
     }

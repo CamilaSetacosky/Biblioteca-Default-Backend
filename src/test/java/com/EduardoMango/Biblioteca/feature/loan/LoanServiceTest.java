@@ -80,7 +80,7 @@ class LoanServiceTest {
         LoanCreateRequest request = new LoanCreateRequest(bookIsbn, null);
 
         given(credentialsRepository.findByUsername("socio")).willReturn(Optional.of(credentials));
-        given(bookRepository.findByIsbn(bookIsbn)).willReturn(Optional.of(book));
+        given(bookRepository.findByIsbnForUpdate(bookIsbn)).willReturn(Optional.of(book));
         given(loanRepository.countByUsuarioAndEstadoIn(socio, List.of(LoanStatus.PRESTADO, LoanStatus.CON_RETRASO))).willReturn(1L);
         given(loanRepository.hasOverdueLoans(socio, LocalDate.now())).willReturn(false);
         given(loanRepository.save(any(Loan.class))).willAnswer(invocation -> invocation.getArgument(0));
@@ -129,7 +129,7 @@ class LoanServiceTest {
 
         given(credentialsRepository.findByUsername("admin")).willReturn(Optional.of(adminCredentials));
         given(userRepository.findByPublicId(targetSocioPublicId)).willReturn(Optional.of(targetSocio));
-        given(bookRepository.findByIsbn(bookIsbn)).willReturn(Optional.of(book));
+        given(bookRepository.findByIsbnForUpdate(bookIsbn)).willReturn(Optional.of(book));
         given(loanRepository.countByUsuarioAndEstadoIn(targetSocio, List.of(LoanStatus.PRESTADO, LoanStatus.CON_RETRASO))).willReturn(0L);
         given(loanRepository.hasOverdueLoans(targetSocio, LocalDate.now())).willReturn(false);
         given(loanRepository.save(any(Loan.class))).willAnswer(invocation -> invocation.getArgument(0));
@@ -153,7 +153,7 @@ class LoanServiceTest {
         LoanCreateRequest request = new LoanCreateRequest(bookIsbn, null);
 
         given(credentialsRepository.findByUsername("socio")).willReturn(Optional.of(credentials));
-        given(bookRepository.findByIsbn(bookIsbn)).willReturn(Optional.of(book));
+        given(bookRepository.findByIsbnForUpdate(bookIsbn)).willReturn(Optional.of(book));
 
         assertThatThrownBy(() -> loanService.createLoan(request, "socio"))
                 .isInstanceOf(BusinessRuleException.class)
@@ -172,7 +172,7 @@ class LoanServiceTest {
         LoanCreateRequest request = new LoanCreateRequest(bookIsbn, null);
 
         given(credentialsRepository.findByUsername("socio")).willReturn(Optional.of(credentials));
-        given(bookRepository.findByIsbn(bookIsbn)).willReturn(Optional.of(book));
+        given(bookRepository.findByIsbnForUpdate(bookIsbn)).willReturn(Optional.of(book));
         given(loanRepository.countByUsuarioAndEstadoIn(socio, List.of(LoanStatus.PRESTADO, LoanStatus.CON_RETRASO))).willReturn(3L);
 
         assertThatThrownBy(() -> loanService.createLoan(request, "socio"))
@@ -192,7 +192,7 @@ class LoanServiceTest {
         LoanCreateRequest request = new LoanCreateRequest(bookIsbn, null);
 
         given(credentialsRepository.findByUsername("socio")).willReturn(Optional.of(credentials));
-        given(bookRepository.findByIsbn(bookIsbn)).willReturn(Optional.of(book));
+        given(bookRepository.findByIsbnForUpdate(bookIsbn)).willReturn(Optional.of(book));
         given(loanRepository.countByUsuarioAndEstadoIn(socio, List.of(LoanStatus.PRESTADO, LoanStatus.CON_RETRASO))).willReturn(1L);
         given(loanRepository.hasOverdueLoans(socio, LocalDate.now())).willReturn(true);
 

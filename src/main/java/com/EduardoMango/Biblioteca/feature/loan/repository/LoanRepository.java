@@ -27,6 +27,9 @@ public interface LoanRepository extends JpaRepository<Loan, Long>, JpaSpecificat
 
     Optional<Loan> findByPublicId(UUID publicId);
 
+    boolean existsByLibroAndFechaDevolucionEfectivaIsNull(
+            com.EduardoMango.Biblioteca.feature.book.Book libro);
+
     long countByUsuarioAndEstadoIn(UserEntity usuario, Collection<LoanStatus> estados);
 
     boolean existsByUsuarioAndEstadoIn(UserEntity usuario, Collection<LoanStatus> estados);

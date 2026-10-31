@@ -47,6 +47,10 @@ public class Book {
     @Column(nullable = false)
     private Integer stockDisponible;
 
+    @Column(nullable = false, columnDefinition = "boolean default true")
+    @Builder.Default
+    private boolean activo = true;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
     private Category categoria;

@@ -14,6 +14,7 @@ import com.EduardoMango.Biblioteca.feature.book.repository.BookRepository;
 import com.EduardoMango.Biblioteca.feature.category.Category;
 import com.EduardoMango.Biblioteca.feature.category.CategoryRepository;
 import com.EduardoMango.Biblioteca.feature.book.repository.BookSpecification;
+import com.EduardoMango.Biblioteca.feature.loan.repository.LoanRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -36,6 +37,34 @@ public class BookService {
     private final CategoryRepository categoryRepository;
     private final AuthorRepository authorRepository;
     private final BookMapper bookMapper;
+    private final LoanRepository loanRepository;
+
+    @Transactional
+    public BookResponse updateBookStatus(String isbn, boolean active) {
+        Book book = bookRepository.findByIsbnForUpdate(isbn)
+                .orElseThrow(() -> new ResourceNotFoundException("Libro no encontrado con ISBN: " + isbn));
+
+        if (!active && loanRepository.existsByLibroAndFechaDevolucionEfectivaIsNull(book)) {
+            throw new BusinessRuleException("No se puede dar de baja un libro con préstamos pendientes de devolución");
+        }
+
+        book.setActivo(active);
+        return bookMapper.toResponse(bookRepository.save(book));
+    }
+
+    public Page<BookResponse> searchInactiveBooks(Pageable pageable) {
+        Specification<Book> inactiveBooks = (root, query, builder) -> builder.isFalse(root.get("activo"));
+        return bookRepository.findAll(inactiveBooks, pageable).map(bookMapper::toResponse);
+    }
+
+    public BookResponse getBookByIsbn(String isbn, boolean includeInactive) {
+        BookResponse book = getBookByIsbn(isbn);
+        if (!includeInactive && !book.activo()) {
+            throw new ResourceNotFoundException("Libro no encontrado con ISBN: " + isbn);
+        }
+        return book;
+    }
+
 
     @Transactional
     public BookResponse createBook(BookCreateRequest request) {
@@ -130,7 +159,9 @@ public class BookService {
                 ? PageRequest.of(0, 10, Sort.by("titulo").ascending())
                 : pageable;
 
-        Specification<Book> spec = BookSpecification.withFilters(titulo, isbn, categoriaPublicId, autorPublicId, soloDisponibles);
+        Specification<Book> activeBooks = (root, query, builder) -> builder.isTrue(root.get("activo"));
+        Specification<Book> spec = BookSpecification.withFilters(titulo, isbn, categoriaPublicId, autorPublicId, soloDisponibles)
+                .and(activeBooks);
         return bookRepository.findAll(spec, effectivePageable).map(bookMapper::toResponse);
     }
 

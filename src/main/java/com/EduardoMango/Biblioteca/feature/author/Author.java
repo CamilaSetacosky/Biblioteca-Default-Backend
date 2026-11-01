@@ -8,7 +8,7 @@ import java.util.Objects;
 import java.util.UUID;
 
 @Entity
-@Table(name = "authors")
+@Table(name = "authors", uniqueConstraints = @UniqueConstraint(name = "uk_author_identity", columnNames = "identity_key"))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -35,8 +35,19 @@ public class Author {
     @Column
     private LocalDate fechaNacimiento;
 
+    @Column(name = "identity_key", length = 512)
+    private String identityKey;
+
+    @PreUpdate
+    public void updateIdentity() {
+        nombre = AuthorIdentity.cleanName(nombre);
+        apellido = AuthorIdentity.cleanName(apellido);
+        identityKey = AuthorIdentity.key(nombre, apellido, fechaNacimiento);
+    }
+
     @PrePersist
     public void prePersist() {
+        updateIdentity();
         if (this.publicId == null) {
             this.publicId = UUID.randomUUID();
         }

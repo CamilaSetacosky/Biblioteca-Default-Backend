@@ -1,6 +1,8 @@
 package com.EduardoMango.Biblioteca.feature.author.service;
 
 import com.EduardoMango.Biblioteca.exception.BusinessRuleException;
+import com.EduardoMango.Biblioteca.exception.ConflictException;
+import com.EduardoMango.Biblioteca.feature.author.AuthorIdentity;
 import com.EduardoMango.Biblioteca.exception.ResourceNotFoundException;
 import com.EduardoMango.Biblioteca.feature.author.Author;
 import com.EduardoMango.Biblioteca.feature.author.dto.AuthorRequest;
@@ -25,11 +27,12 @@ public class AuthorService {
 
     @Transactional
     public AuthorResponse createAuthor(AuthorRequest request) {
+        rejectDuplicate(request, null);
         Author author = authorMapper.toEntity(request);
         if (author.getPublicId() == null) {
             author.setPublicId(UUID.randomUUID());
         }
-        Author saved = authorRepository.save(author);
+        Author saved = authorRepository.saveAndFlush(author);
         return authorMapper.toResponse(saved);
     }
 
@@ -53,9 +56,22 @@ public class AuthorService {
         Author author = authorRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new ResourceNotFoundException("Autor no encontrado con publicId: " + publicId));
 
+        rejectDuplicate(request, publicId);
         authorMapper.updateEntityFromRequest(request, author);
-        Author updated = authorRepository.save(author);
+        Author updated = authorRepository.saveAndFlush(author);
         return authorMapper.toResponse(updated);
+    }
+
+    private void rejectDuplicate(AuthorRequest request, UUID currentPublicId) {
+        String requestedKey = AuthorIdentity.key(request.nombre(), request.apellido(), request.fechaNacimiento());
+        boolean duplicate = authorRepository.findAllByFechaNacimiento(request.fechaNacimiento()).stream()
+                .filter(author -> !author.getPublicId().equals(currentPublicId))
+                .anyMatch(author -> requestedKey.equals(AuthorIdentity.key(
+                        author.getNombre(), author.getApellido(), author.getFechaNacimiento())));
+
+        if (duplicate) {
+            throw new ConflictException(AuthorIdentity.DUPLICATE_MESSAGE);
+        }
     }
 
     @Transactional

@@ -46,7 +46,7 @@ class AuthorServiceTest {
         AuthorResponse response = new AuthorResponse(saved.getPublicId(), "Gabriel", "García Márquez", "Colombiana", LocalDate.of(1927, 3, 6));
 
         when(authorMapper.toEntity(request)).thenReturn(author);
-        when(authorRepository.save(any(Author.class))).thenReturn(saved);
+        when(authorRepository.saveAndFlush(any(Author.class))).thenReturn(saved);
         when(authorMapper.toResponse(saved)).thenReturn(response);
 
         AuthorResponse result = authorService.createAuthor(request);
@@ -54,7 +54,7 @@ class AuthorServiceTest {
         assertNotNull(result);
         assertEquals("Gabriel", result.nombre());
         assertEquals("García Márquez", result.apellido());
-        verify(authorRepository).save(any(Author.class));
+        verify(authorRepository).saveAndFlush(any(Author.class));
     }
 
     @Test

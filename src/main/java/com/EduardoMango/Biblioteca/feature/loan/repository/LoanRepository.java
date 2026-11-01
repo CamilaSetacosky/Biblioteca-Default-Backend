@@ -30,6 +30,8 @@ public interface LoanRepository extends JpaRepository<Loan, Long>, JpaSpecificat
     boolean existsByLibroAndFechaDevolucionEfectivaIsNull(
             com.EduardoMango.Biblioteca.feature.book.Book libro);
 
+    boolean existsByUsuarioAndFechaDevolucionEfectivaIsNull(UserEntity usuario);
+
     long countByUsuarioAndEstadoIn(UserEntity usuario, Collection<LoanStatus> estados);
 
     boolean existsByUsuarioAndEstadoIn(UserEntity usuario, Collection<LoanStatus> estados);

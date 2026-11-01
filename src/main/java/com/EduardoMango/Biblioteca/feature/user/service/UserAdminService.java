@@ -2,7 +2,6 @@ package com.EduardoMango.Biblioteca.feature.user.service;
 
 import com.EduardoMango.Biblioteca.exception.BusinessRuleException;
 import com.EduardoMango.Biblioteca.exception.ResourceNotFoundException;
-import com.EduardoMango.Biblioteca.feature.loan.domain.LoanStatus;
 import com.EduardoMango.Biblioteca.feature.loan.repository.LoanRepository;
 import com.EduardoMango.Biblioteca.feature.user.dto.UserAdminResponse;
 import com.EduardoMango.Biblioteca.feature.user.mapper.UserAdminMapper;
@@ -13,6 +12,8 @@ import com.EduardoMango.Biblioteca.feature.auth.domain.Roles;
 import com.EduardoMango.Biblioteca.feature.auth.repository.CredentialsRepository;
 import com.EduardoMango.Biblioteca.feature.auth.repository.RoleRepository;
 import com.EduardoMango.Biblioteca.feature.user.UserRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -21,7 +22,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -35,6 +35,7 @@ public class UserAdminService {
     private final RoleRepository roleRepository;
     private final LoanRepository loanRepository;
     private final UserAdminMapper userAdminMapper;
+    private final EntityManager entityManager;
 
     public Page<UserAdminResponse> getUsers(int page, int size, String sort) {
         if (page < 0 || size < 1 || size > 100) {
@@ -76,9 +77,14 @@ public class UserAdminService {
             throw new BusinessRuleException("Operación no permitida: Un usuario no puede desactivar su propia cuenta");
         }
 
+        entityManager.refresh(targetUser, LockModeType.PESSIMISTIC_WRITE);
+
+        if (Boolean.TRUE.equals(activo) && !Boolean.TRUE.equals(targetUser.getEnabled())) {
+            throw new BusinessRuleException("La cuenta debe confirmar su correo antes de ser reactivada");
+        }
+
         if (Boolean.FALSE.equals(activo)) {
-            boolean hasPendingLoans = loanRepository.existsByUsuarioAndEstadoIn(
-                    targetUser, List.of(LoanStatus.PRESTADO, LoanStatus.CON_RETRASO));
+            boolean hasPendingLoans = loanRepository.existsByUsuarioAndFechaDevolucionEfectivaIsNull(targetUser);
             if (hasPendingLoans) {
                 throw new BusinessRuleException("No se puede desactivar un usuario con préstamos pendientes de devolución");
             }
@@ -89,6 +95,9 @@ public class UserAdminService {
 
         credentialsRepository.findByUsuario(targetUser).ifPresent(credentials -> {
             credentials.setEnabled(activo);
+            if (Boolean.FALSE.equals(activo)) {
+                credentials.setRefreshToken(null);
+            }
             credentialsRepository.save(credentials);
         });
 

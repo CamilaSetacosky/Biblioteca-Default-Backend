@@ -55,6 +55,9 @@ public class AccountVerificationService {
         }
 
         UserEntity user = token.getUser();
+        if (Boolean.TRUE.equals(user.getEnabled()) && !Boolean.TRUE.equals(user.getActivo())) {
+            throw new BusinessRuleException("La cuenta fue desactivada. Contactá al bibliotecario para reactivarla");
+        }
         user.setEnabled(true);
         user.setActivo(true);
         userRepository.save(user);
@@ -81,6 +84,9 @@ public class AccountVerificationService {
         }
 
         userRepository.findByEmail(request.email().trim().toLowerCase()).ifPresent(user -> {
+            if (Boolean.TRUE.equals(user.getEnabled())) {
+                return;
+            }
             boolean isEnabled = credentialsRepository.findByUsuario(user)
                     .map(CredentialsEntity::isEnabled)
                     .orElse(false);

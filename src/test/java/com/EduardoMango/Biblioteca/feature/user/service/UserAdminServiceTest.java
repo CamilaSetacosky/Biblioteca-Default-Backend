@@ -48,6 +48,9 @@ class UserAdminServiceTest {
     @Mock
     private UserAdminMapper userAdminMapper;
 
+    @Mock
+    private jakarta.persistence.EntityManager entityManager;
+
     @InjectMocks
     private UserAdminService userAdminService;
 
@@ -72,7 +75,7 @@ class UserAdminServiceTest {
 
         given(userRepository.findByPublicId(targetPublicId)).willReturn(Optional.of(targetUser));
         given(credentialsRepository.findByUsername("admin")).willReturn(Optional.of(adminCredentials));
-        given(loanRepository.existsByUsuarioAndEstadoIn(targetUser, List.of(LoanStatus.PRESTADO, LoanStatus.CON_RETRASO))).willReturn(false);
+        given(loanRepository.existsByUsuarioAndFechaDevolucionEfectivaIsNull(targetUser)).willReturn(false);
         given(credentialsRepository.findByUsuario(targetUser)).willReturn(Optional.of(targetCredentials));
         given(userAdminMapper.toUserAdminResponse(targetUser)).willReturn(new UserAdminResponse(targetPublicId, "Pedro", "López", "pedro@test.com", "SOCIO", false));
 
@@ -101,7 +104,7 @@ class UserAdminServiceTest {
 
         given(userRepository.findByPublicId(targetPublicId)).willReturn(Optional.of(targetUser));
         given(credentialsRepository.findByUsername("admin")).willReturn(Optional.of(adminCredentials));
-        given(loanRepository.existsByUsuarioAndEstadoIn(targetUser, List.of(LoanStatus.PRESTADO, LoanStatus.CON_RETRASO))).willReturn(true);
+        given(loanRepository.existsByUsuarioAndFechaDevolucionEfectivaIsNull(targetUser)).willReturn(true);
 
         assertThatThrownBy(() -> userAdminService.updateUserStatus(targetPublicId, false, "admin"))
                 .isInstanceOf(BusinessRuleException.class)

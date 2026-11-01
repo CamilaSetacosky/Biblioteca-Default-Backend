@@ -13,6 +13,8 @@ import com.EduardoMango.Biblioteca.feature.auth.domain.CredentialsEntity;
 import com.EduardoMango.Biblioteca.feature.user.UserEntity;
 import com.EduardoMango.Biblioteca.feature.auth.repository.CredentialsRepository;
 import com.EduardoMango.Biblioteca.feature.user.UserRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
 import lombok.RequiredArgsConstructor;
 import com.EduardoMango.Biblioteca.feature.loan.dto.LoanSupervisionResponse;
 import com.EduardoMango.Biblioteca.feature.loan.repository.LoanSpecification;
@@ -39,6 +41,7 @@ public class LoanService {
     private final CredentialsRepository credentialsRepository;
     private final LoanMapper loanMapper;
     private final ApplicationEventPublisher eventPublisher;
+    private final EntityManager entityManager;
 
     @Transactional
     public LoanResponse createLoan(LoanCreateRequest request, String authenticatedPrincipalName) {
@@ -58,6 +61,8 @@ public class LoanService {
         } else {
             targetUser = authenticatedUser;
         }
+
+        entityManager.refresh(targetUser, LockModeType.PESSIMISTIC_WRITE);
 
         if (Boolean.FALSE.equals(targetUser.getActivo())) {
             throw new BusinessRuleException("El usuario se encuentra inactivo y no puede solicitar préstamos");

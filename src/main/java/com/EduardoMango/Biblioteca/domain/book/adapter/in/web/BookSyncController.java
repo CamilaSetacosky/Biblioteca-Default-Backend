@@ -33,7 +33,9 @@ public class BookSyncController {
             @ApiResponse(responseCode = "400", description = "El libro no posee ISBN para sincronizar o solicitud inválida", content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
             @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
             @ApiResponse(responseCode = "403", description = "Acceso denegado (requiere rol BIBLIOTECARIO)", content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
-            @ApiResponse(responseCode = "404", description = "Libro no encontrado en el catálogo local o no hallado en Google Books", content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
+            @ApiResponse(responseCode = "404", description = "Libro no encontrado en el catálogo local o no hallado en Google Books", content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "503", description = "Google Books no disponible: cuota, configuración, conexión o tiempo de espera. Sin reintentos automáticos.", content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "502", description = "Respuesta inválida o solicitud rechazada por Google Books", content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     @PostMapping("/{identifier}/sync-google-books")
     @PreAuthorize("hasRole('BIBLIOTECARIO')")

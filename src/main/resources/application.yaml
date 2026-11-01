@@ -47,6 +47,7 @@ google:
     api:
       key: ${GOOGLE_BOOKS_API_KEY:}
       base-url: ${GOOGLE_BOOKS_BASE_URL:https://www.googleapis.com/books/v1}
+      timeout: ${GOOGLE_BOOKS_TIMEOUT:10s}
 
 app:
   scheduler:

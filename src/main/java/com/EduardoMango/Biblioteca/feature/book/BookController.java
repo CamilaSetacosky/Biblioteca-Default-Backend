@@ -72,7 +72,9 @@ public class BookController {
             @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
             @ApiResponse(responseCode = "403", description = "Acceso denegado (requiere rol BIBLIOTECARIO)", content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
             @ApiResponse(responseCode = "404", description = "No se encontró el libro en la API de Google Books para el ISBN especificado", content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
-            @ApiResponse(responseCode = "409", description = "El libro ya se encuentra registrado en el catálogo local", content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
+            @ApiResponse(responseCode = "409", description = "El libro ya se encuentra registrado en el catálogo local", content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "503", description = "Google Books no disponible: cuota, configuración, conexión o tiempo de espera. Sin reintentos automáticos.", content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "502", description = "Respuesta inválida o solicitud rechazada por Google Books", content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     @PostMapping("/import")
     @PreAuthorize("hasRole('BIBLIOTECARIO')")
@@ -85,7 +87,9 @@ public class BookController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Borrador obtenido exitosamente", content = @Content(schema = @Schema(implementation = ExternalBookPreviewDto.class))),
             @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
-            @ApiResponse(responseCode = "404", description = "ISBN no encontrado en el proveedor externo", content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
+            @ApiResponse(responseCode = "404", description = "ISBN no encontrado en el proveedor externo", content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "503", description = "Google Books no disponible: cuota, configuración, conexión o tiempo de espera. Sin reintentos automáticos. Retry-After solo si lo informa el proveedor.", content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "502", description = "Respuesta inválida o solicitud rechazada por Google Books", content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     @GetMapping("/external/isbn/{isbn}")
     @PreAuthorize("hasAnyRole('SOCIO', 'BIBLIOTECARIO')")

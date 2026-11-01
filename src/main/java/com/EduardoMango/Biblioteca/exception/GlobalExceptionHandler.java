@@ -19,6 +19,28 @@ import java.net.URI;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    @ExceptionHandler(GoogleBooksException.class)
+    public ResponseEntity<ProblemDetail> handleGoogleBooksException(
+            GoogleBooksException ex, HttpServletRequest request) {
+        String errorId = java.util.UUID.randomUUID().toString();
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                org.springframework.http.HttpStatusCode.valueOf(ex.getFailure().status()), ex.getMessage());
+        problem.setTitle(ex.getFailure().status() == 503 ? "Servicio externo no disponible" : "Respuesta del proveedor inválida");
+        problem.setInstance(URI.create(request.getRequestURI()));
+        problem.setProperty("code", ex.getFailure().code());
+        problem.setProperty("errorId", errorId);
+        problem.setProperty("timestamp", LocalDateTime.now());
+        log.warn("Google Books errorId={} code={} upstreamStatus={}",
+                errorId, ex.getFailure().code(), ex.getUpstreamStatus());
+        var response = ResponseEntity.status(ex.getFailure().status());
+        if (ex.getFailure().status() == 503 && ex.getRetryAfter() != null) {
+            response.header("Retry-After", ex.getRetryAfter());
+        }
+        return response.body(problem);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ProblemDetail handleValidationExceptions(
             MethodArgumentNotValidException ex, HttpServletRequest request) {

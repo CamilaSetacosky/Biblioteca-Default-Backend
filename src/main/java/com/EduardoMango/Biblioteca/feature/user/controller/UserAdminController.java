@@ -50,7 +50,7 @@ public class UserAdminController {
     }
 
     @Operation(summary = "Modificar estado de cuenta del usuario",
-            description = "Activa o desactiva una cuenta. Aplica reglas de negocio: el bibliotecario no puede desactivar su propia cuenta ni suspender usuarios con préstamos activos/vencidos. Sincroniza con Spring Security UserDetails.isEnabled(). Requiere rol BIBLIOTECARIO.")
+            description = "Activa o desactiva una cuenta. Aplica reglas de negocio: el bibliotecario no puede desactivar su propia cuenta ni suspender usuarios con préstamos sin devolver; los devueltos tarde no bloquean la baja. La reactivación requiere correo confirmado. Conserva el historial, deshabilita el acceso de sesiones previas e invalida el refresh token al dar de baja. Requiere rol BIBLIOTECARIO.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Estado de cuenta actualizado exitosamente", content = @Content(schema = @Schema(implementation = UserAdminResponse.class))),
             @ApiResponse(responseCode = "400", description = "Autodesactivación prohibida o usuario con préstamos pendientes de devolución", content = @Content(schema = @Schema(implementation = ProblemDetail.class))),

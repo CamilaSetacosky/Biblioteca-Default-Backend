@@ -73,6 +73,10 @@ public class AuthService {
         CredentialsEntity user = credentialsRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado para el refresh token"));
 
+        if (!user.isEnabled()) {
+            throw new IllegalArgumentException("La cuenta se encuentra desactivada");
+        }
+
         if (user.getRefreshToken() == null || !user.getRefreshToken().equals(refreshToken)) {
             throw new IllegalArgumentException("El token de refresco no coincide con el registrado en el sistema");
         }

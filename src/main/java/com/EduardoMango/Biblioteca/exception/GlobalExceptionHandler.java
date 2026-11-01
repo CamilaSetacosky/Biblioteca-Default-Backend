@@ -1,5 +1,7 @@
 package com.EduardoMango.Biblioteca.exception;
 
+import com.EduardoMango.Biblioteca.feature.author.AuthorIdentity;
+import org.springframework.dao.DataIntegrityViolationException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -60,6 +62,16 @@ public class GlobalExceptionHandler {
         problemDetail.setProperty("error", "Error de validación en los campos");
 
         return problemDetail;
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ProblemDetail handleDataIntegrityViolation(
+            DataIntegrityViolationException ex, HttpServletRequest request) {
+        if (AuthorIdentity.isDuplicateConstraint(ex)) {
+            return handleConflictException(new ConflictException(
+                    AuthorIdentity.DUPLICATE_MESSAGE), request);
+        }
+        throw ex;
     }
 
     @ExceptionHandler(BusinessRuleException.class)

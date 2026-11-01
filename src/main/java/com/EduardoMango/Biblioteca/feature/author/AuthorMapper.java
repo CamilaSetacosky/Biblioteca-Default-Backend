@@ -10,12 +10,14 @@ public interface AuthorMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "publicId", ignore = true)
+    @Mapping(target = "identityKey", ignore = true)
     Author toEntity(AuthorRequest request);
 
     AuthorResponse toResponse(Author author);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "publicId", ignore = true)
+    @Mapping(target = "identityKey", ignore = true)
     void updateEntityFromRequest(AuthorRequest request, @MappingTarget Author author);
 }
 

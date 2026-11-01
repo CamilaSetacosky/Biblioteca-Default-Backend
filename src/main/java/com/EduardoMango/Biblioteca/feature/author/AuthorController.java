@@ -32,13 +32,13 @@ public class AuthorController {
 
     private final AuthorService authorService;
 
-    @Operation(summary = "Crear nuevo autor", description = "Registra un autor en el catálogo. Requiere rol BIBLIOTECARIO.")
+    @Operation(summary = "Crear nuevo autor", description = "Registra un autor. Rechaza nombre, apellido y fecha de nacimiento duplicados, ignorando mayúsculas y espacios sobrantes. Dos fechas desconocidas se consideran iguales. Requiere rol BIBLIOTECARIO.")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Autor creado exitosamente", content = @Content(schema = @Schema(implementation = AuthorResponse.class))),
             @ApiResponse(responseCode = "400", description = "Datos de entrada inválidos", content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
             @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
             @ApiResponse(responseCode = "403", description = "Acceso denegado (requiere rol BIBLIOTECARIO)", content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
-            @ApiResponse(responseCode = "409", description = "Ya existe un autor con el mismo nombre y apellido", content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
+            @ApiResponse(responseCode = "409", description = "Ya existe un autor con el mismo nombre, apellido y fecha de nacimiento", content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     @PostMapping
     @PreAuthorize("hasRole('BIBLIOTECARIO')")
@@ -84,7 +84,7 @@ public class AuthorController {
             @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
             @ApiResponse(responseCode = "403", description = "Acceso denegado (requiere rol BIBLIOTECARIO)", content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
             @ApiResponse(responseCode = "404", description = "Autor no encontrado", content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
-            @ApiResponse(responseCode = "409", description = "Conflicto por duplicidad de nombre y apellido con otro autor", content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
+            @ApiResponse(responseCode = "409", description = "Conflicto por duplicidad de nombre, apellido y fecha de nacimiento con otro autor", content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     @PutMapping("/{publicId}")
     @PreAuthorize("hasRole('BIBLIOTECARIO')")
